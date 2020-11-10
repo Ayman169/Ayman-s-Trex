@@ -74,7 +74,7 @@ function setup()
 //draw function where we give all the conditions to play the game
 function draw()
 {
-  background('grey');
+  background('yellow');
   
   //score
   text("score: "+score,500,20);
