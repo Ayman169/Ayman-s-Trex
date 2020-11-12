@@ -17,6 +17,8 @@ var restart;
 var gameoverimage;
 var restartimage;
 var jumpsound,diesound,checkpointsound;
+
+localStorage["HighestScore"]=0;
 //preload funcion to load all the images and animation
 function preload()
 {
@@ -41,8 +43,8 @@ function preload()
 //setup function where all the sprites can be created
 function setup()
 {
-  createCanvas(600,200);
-  trex = createSprite(50,160,20,50);
+  createCanvas(windowWidth,windowHeight);
+  trex = createSprite(50,height-70,20,50);
   trex.addAnimation("running", trex_running);
   trex.addAnimation("collided",trex_collided)
   trex.scale = 0.5;
@@ -53,21 +55,21 @@ function setup()
 //adding artificial intelligence
 //trex.setCollider("rectangle",0,0,400,trex.height);
   
-  ground = createSprite(200,180,400,20);
+  ground = createSprite(width/2,height-30,width,2);
   ground.addAnimation("ground", groundimage);
-  ground.x = ground.width/2;
+  ground.x = width/2;
   edges = createEdgeSprites();
   
-  invisibleground = createSprite(200,195,400,20);
+  invisibleground = createSprite(width/2,height-10,width,20);
   invisibleground.visible= false;
   //GROUP() predefined class in p5
   obstacleGroup = new Group();
   cloudGroup = new Group(); 
   
-  restart = createSprite(300,150,20,20);
+  restart = createSprite(width/2,height/2-50);
   restart.addImage("restart",restartimage);
   restart.scale = 0.5
-  gameover = createSprite(300,100,20,20);
+  gameover = createSprite(width/2,height/2);
   gameover.addImage("gameover",gameoverimage)
   gameover.scale = 0.5;
 }
@@ -78,12 +80,19 @@ function draw()
   
   //score
   text("score: "+score,500,20);
+  text("Highest Score: "+localStorage["HighestScore"],30,20)
   
   if(gamestate == PLAY)
     {
       gameover.visible=false;
       restart.visible=false;
       ground.velocityX = -2;
+      
+      if((touches.length>0 || keyDown("space")) && trex.y>=height-120){
+        trex.velocityY = -8;
+        jumpsound.play();
+        touches=[];
+      }
       score=score+Math.round(getFrameRate()/60);
       //ground reset
       if(ground.x<0)
@@ -91,11 +100,11 @@ function draw()
     ground.x = ground.width / 2; 
      }
       //trex jump
-      if(keyDown("space")&& trex.y>=100)
-     {
-     trex.velocityY = -8;
-     jumpsound.play();
-    }
+      //if(keyDown("space")&& trex.y>=100)
+     //{
+     //trex.velocityY = -8;
+    // jumpsound.play();
+    //}
       //trexgravity
   trex.velocityY = trex.velocityY + 0.5;
       //calling generateclouds function
@@ -129,9 +138,14 @@ function draw()
       trex.velocityY=0;
       gameover.visible=true;
       restart.visible=true;
-       if(mousePressedOver(restart)){
-    reset();
-  }
+       //if(mousePressedOver(restart)){
+    //reset();
+ // }
+      
+      if(touches.length<0 || keyDown("space")){
+        reset();
+        touches=[];
+      }
     }
   
   
@@ -149,6 +163,10 @@ function reset(){
   obstacleGroup.destroyEach();
   cloudGroup.destroyEach();
   trex.changeAnimation("running", trex_running);
+  
+  if(localStorage["HighestScore"]<score){
+    localStorage["HighestScore"]=score;
+  }
   score=0;
   
 }
@@ -158,7 +176,7 @@ function generateclouds()
 {
  if(frameCount % 60== 0)
    {
- cloud= createSprite(600,100,40,10);  
+ cloud= createSprite(width+20,height-300,40,10);  
   cloud.velocityX= -2;
   cloud.addImage(cloudimage);
   cloud.scale=0.5;
@@ -166,7 +184,7 @@ function generateclouds()
   cloud.lifetime=300;
  //console.log
  //console.log(cloud.depth);
-     cloud.y=Math.round(random(10,60));
+     cloud.y=Math.round(random(100,220));
    //adjust the depth
      cloud.depth=trex.depth;
      trex.depth=trex.depth+1;
@@ -177,7 +195,7 @@ function generateclouds()
 function generateObstacles(){
   if(frameCount%80==0){
     //local variable
- var obstacle= createSprite(600,165,10,40);
+ var obstacle= createSprite(600,height-45,10,40);
   obstacle.velocityX=-(4+score/500);
   obstacle.scale=0.5;
   obstacle.lifetime = 300;
